@@ -3,7 +3,6 @@ import expressWs from 'express-ws';
 import path from 'path';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
-import mongoose from 'mongoose';
 import session from 'express-session'; 
 import WebpackDevServer from 'webpack-dev-server';
 import webpack from 'webpack';
@@ -11,17 +10,32 @@ import api from './routes';
 import ws from './ws';
 
 const app = express();
-const port = 3000;
-const devPort = 4000;
-expressWs(app);
+const port = 3100;
+const devPort = 4100;
+const wsInstant = expressWs(app);
+const wsServer = wsInstant.getWss();
+const wsClient = {}; // empty object about client
 
-/* mongodb connection */
-const db = mongoose.connection;
-db.on('error', console.error);
-db.once('open', () => { 
-  console.log('Connected to mongodb server'); 
+/*websocket client connection*/
+wsServer.on('connection', (ws) =>{ // arrow function
+  let clientUrl = ws.upgradeReq.url.replace('.websocket','');
+  // just simplify output. if not, '~~.websocket' is represented.
+  if (wsClient.hasOwnProperty(clientUrl)){ 
+    wsClient[clientUrl].push(ws);
+  } else{ // only for initial client
+    wsClient[clientUrl] = [ws];
+  };
 });
-mongoose.connect('mongodb://username:password@host:port/database');
+
+// process message
+app.ws('*', (ws, req) => {// '*' : all request
+  ws.on('message', (msg) => {
+    let senderUrl = ws.upgradeReq.url.replace('.websocket','');
+    wsClient[senderUrl].forEach((client) =>{
+     client.send(msg);
+    });
+  });
+});
 
 /* use session */
 app.use(session({
