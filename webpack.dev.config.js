@@ -23,6 +23,7 @@ module.exports = {
   devServer: {
     filename: 'index_bundle.js',
     publicPath: '/',
+    disableHostCheck: true,
     historyApiFallback: true,
     contentBase: './public',
     proxy: {

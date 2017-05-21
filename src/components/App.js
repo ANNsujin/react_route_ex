@@ -1,72 +1,41 @@
-import React, { Component }from 'react';
+import React, {Component} from 'react';
+import Home from './Home.js';
+import About from './About.js';
+import Topics from './Topics.js';
+import { BrowserRouter as Router, Link, Route } from 'react-router-dom'
+// BrowserRouter를 Router라고 renaming
+//
+//
+//
 
 class App extends Component {
-  constructor() {
-    super();
-    this.state = {
-      ws: new WebSocket('ws://45.76.212.85:3100/ws/chat'),
-      text:"",
-      chatBox:""
-    }
-  }
-  handleChange(e) {
-    this.setState({text:e.target.value});
-  }
-  handleSubmit(e) {
-    e.preventDefault();
-    let {ws, text} = this.state;
-    ws.send(text);
-    this.setState({text:''});
-  }
-  handleData(data) {
-    // console.log(data);
-    let chatBox = this.state.chatBox;
-    chatBox += '/n' + data;
-    this.setState({chatBox});
-    
-  }
-  setupWebsocket() {
-    let ws = this.state.ws;
-    ws.onopen = () => {
-      console.log('Websocket connected');
-    };
-    ws.onmessage = (e) => {
-      this.handleData(e.data);
-    };
-    ws.onclose = () => {
-      console.log('Websocket disconnected');
-      if (this.props.reconnect) {
-        setTimeout(() => {
-          this.setState({attempts: this.state.attempts++});
-          this.setupWebsocket();
-        }, 2000);
-      }
-    }
-  }
-  componentDidMount() {
-    this.setupWebsocket();
-  }
-  componentWillUnmount() {
-    let ws = this.state.ws;
-    ws.close();
-  }
-  render(){
+  render = ()=>{  // return에는 하나의 div tag로 이뤄져야한다.
+                  // Router을 불러옴. 
     return (
       <div>
-        <h1>Hello World</h1>
-        <h3>Node.js express express-ws React, Webpack with ES6</h3>
-	<form name='chat' onSubmit ={(e) => this.handleSubmit(e)} >
-	  <div className="chatBox">
-             {this.state.chatBox.split('/n').map (line => {
-	       return (<span>{line}<br/></span>)
-	     })}
-	  </div>
-	  <input type='text' name='input' onChange={(e) => this.handleChange(e)} />
-	  <input type='submit' value='Enter' />
-        </form>
+        <Router>
+          <div>
+            <ul>
+              <li><Link to="/">Home</Link></li>
+              <li><Link to="/about">About</Link></li>
+              <li><Link to="/topics">Topics</Link></li>
+            </ul>
+            <hr/>
+            <Route exact path = "/" component={Home} />
+            <Route path = '/about' component={About} />
+            <Route path = '/topics' component={Topics} />
+          </div>
+        </Router> 
       </div>
     );
   }
-}
 
-export default App;
+};
+
+export default App; // App을 기본으로 export함.
+
+
+// App.js 와 여러 js 파일을 한꺼번에 보내고 싶다면, 
+// index.js 파일을 생성하고 
+// App.js와 다른 js파일을 import 하고
+// 하나로 묶어 export함.
